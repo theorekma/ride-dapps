@@ -1,0 +1,13 @@
+{-# STDLIB_VERSION 3 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+@Verifier(tx)
+func verify() = {
+    match(tx){
+        case d:DataTransaction => sigVerify(d.bodyBytes, d.proofs[0], d.senderPublicKey)
+        case d:SetAssetScriptTransaction => sigVerify(d.bodyBytes, d.proofs[0], d.senderPublicKey)
+        case _ => false
+    }
+}
+
+# right contract for week2

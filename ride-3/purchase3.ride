@@ -1,0 +1,22 @@
+@Callable(i)
+func purchase(coupon: String) = {
+    let pmt = extract(i.payment)
+    if (isDefined(pmt.assetId)) then throw("can use WAVES only at the moment")
+    else {
+        let customerAddress = toBase58String(i.caller.bytes)
+        let price = match getInteger(this, +coupon + "_coupon_price")    {
+            case a:Int => a
+            case _ => 0
+        }
+        if price == 0 then throw("Plz, set the price before")
+        else if (pmt.amount < price) then throw("purchase amount cannot be less then then item price")
+        else if (pmt.amount > price) then throw("purchase amount cannot be more then then item price")
+        else {
+            WriteSet([
+                DataEntry("status:"+coupon+"_customer_"+customerAddress, "confirmed"),
+                DataEntry("price:"+coupon+"_customer_"+customerAddress, price)
+            ])
+        }
+
+    }
+}

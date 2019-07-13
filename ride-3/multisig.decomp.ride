@@ -1,0 +1,58 @@
+{-# STDLIB_VERSION 3 #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+{-# CONTENT_TYPE DAPP #-}
+let pk2 = base58'8JGCYhwrtWtTt8NsGppRfqJWDbJSPZj5mUvQ4KYX1TZK'
+
+let pk3 = base58'2a9RnZ3Cb73AT6swSm1pjXwpC9WcjzBRpfMmEFW4qXi1'
+
+func verifyKey (pubKey,tx) = if (if (if (sigVerify(tx.bodyBytes, getElement(tx.proofs, 0), pubKey))
+    then true
+    else sigVerify(tx.bodyBytes, getElement(tx.proofs, 1), pubKey))
+    then true
+    else sigVerify(tx.bodyBytes, getElement(tx.proofs, 2), pubKey))
+    then 1
+    else 0
+
+
+
+@Verifier(ttx)
+func ver () = {
+    let owner = ttx.senderPublicKey
+    let $match0 = ttx
+    if (if (_isInstanceOf($match0, "DataTransaction"))
+        then true
+        else if (_isInstanceOf($match0, "SponsorFeeTransaction"))
+            then true
+            else if (_isInstanceOf($match0, "SetScriptTransaction"))
+                then true
+                else if (_isInstanceOf($match0, "CreateAliasTransaction"))
+                    then true
+                    else if (_isInstanceOf($match0, "LeaseCancelTransaction"))
+                        then true
+                        else if (_isInstanceOf($match0, "LeaseTransaction"))
+                            then true
+                            else if (_isInstanceOf($match0, "IssueTransaction"))
+                                then true
+                                else if (_isInstanceOf($match0, "InvokeScriptTransaction"))
+                                    then true
+                                    else if (_isInstanceOf($match0, "SetAssetScriptTransaction"))
+                                        then true
+                                        else if (_isInstanceOf($match0, "TransferTransaction"))
+                                            then true
+                                            else if (_isInstanceOf($match0, "ExchangeTransaction"))
+                                                then true
+                                                else if (_isInstanceOf($match0, "MassTransferTransaction"))
+                                                    then true
+                                                    else if (_isInstanceOf($match0, "BurnTransaction"))
+                                                        then true
+                                                        else _isInstanceOf($match0, "ReissueTransaction"))
+        then {
+            let tx = $match0
+            let pk1s = verifyKey(owner, tx)
+            let pk2s = verifyKey(pk2, tx)
+            let pk3s = verifyKey(pk3, tx)
+            let s = ((pk1s + pk2s) + pk3s)
+            (s >= 2)
+            }
+        else false
+    }

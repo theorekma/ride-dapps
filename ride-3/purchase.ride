@@ -1,0 +1,55 @@
+{-# STDLIB_VERSION 3 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+# let pk1 = base58'5AzfA9UfpWVYiwFwvdr77k6LWupSTGLb14b24oVdEpMM'
+# OK, pk1 will be owner
+let pk2 = base58'8JGCYhwrtWtTt8NsGppRfqJWDbJSPZj5mUvQ4KYX1TZK'
+let pk3 = base58'2a9RnZ3Cb73AT6swSm1pjXwpC9WcjzBRpfMmEFW4qXi1'
+
+func verifyKey(pubKey:ByteVector, tx:Transaction) = {
+    if (sigVerify(tx.bodyBytes, tx.proofs[0], pubKey) || sigVerify(tx.bodyBytes, tx.proofs[1], pubKey) || sigVerify(tx.bodyBytes, tx.proofs[2], pubKey))
+    then 1
+    else 0
+}
+
+
+@Callable(i)
+func purchase() = {
+    throw("only Waves supported today")
+    #let pmt = extract(i.payment)
+    #if (isDefined(pmt.assetId)) then throw("only Waves supported today")
+    #else {
+    #    let customerAddr = toBase58String(i.caller.bytes)
+    #    let price = match getInteger(this, "item_A_coupon_price"){
+    #        case p:Int => p
+    #        case _ => 0
+    #    }
+    #    if price == 0 then throw("Plz, set the price before")
+    #    else if (pmt.amount < price) then throw("purchase amount cannot be less then then item price")
+    #    else if (pmt.amount > price) then throw("purchase amount cannot be more then then item price")
+      #  else {
+      #      WriteSet([
+     #           DataEntry("status:A_customer_"+customerAddr, "confirmed"),
+     #           DataEntry("price:A_customer_"+customerAddr, price)
+     #       ])
+    #    }
+    #
+    #}
+}
+
+@Verifier(ttx)
+func ver() = {
+    let owner = ttx.senderPublicKey
+    match ttx {
+        case tx:Transaction =>
+            let pk1s = verifyKey(owner, tx)
+            let pk2s = verifyKey(pk2, tx)
+            let pk3s = verifyKey(pk3, tx)
+
+            let s = pk1s + pk2s + pk3s
+            s >= 2
+        case _ => false
+    }
+
+}

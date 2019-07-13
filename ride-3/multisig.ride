@@ -1,0 +1,30 @@
+{-# STDLIB_VERSION 3 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+# let pk1 = base58'5AzfA9UfpWVYiwFwvdr77k6LWupSTGLb14b24oVdEpMM'
+# OK, pk1 will be owner
+let pk2 = base58'8JGCYhwrtWtTt8NsGppRfqJWDbJSPZj5mUvQ4KYX1TZK'
+let pk3 = base58'2a9RnZ3Cb73AT6swSm1pjXwpC9WcjzBRpfMmEFW4qXi1'
+
+func verifyKey(pubKey:ByteVector, tx:Transaction) = {
+    if (sigVerify(tx.bodyBytes, tx.proofs[0], pubKey) || sigVerify(tx.bodyBytes, tx.proofs[1], pubKey) || sigVerify(tx.bodyBytes, tx.proofs[2], pubKey))
+    then 1
+    else 0
+}
+
+@Verifier(ttx)
+func ver() = {
+    let owner = ttx.senderPublicKey
+    match ttx {
+        case tx:Transaction =>
+            let pk1s = verifyKey(owner, tx)
+            let pk2s = verifyKey(pk2, tx)
+            let pk3s = verifyKey(pk3, tx)
+
+            let s = pk1s + pk2s + pk3s
+            s >= 2
+        case _ => false
+    }
+
+}
